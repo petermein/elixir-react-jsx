@@ -1,22 +1,29 @@
 var Elixir = require('laravel-elixir');
 var gulp = require('gulp');
-var gulpif = require('gulp-if');
 var react = require('gulp-react');
-var concat = require('gulp-concat');
 
-var Task = Elixir.Task;
+var $ = Elixir.Plugins;
+
 Elixir.extend("jsx", function (src, dest) {
+
     src = src || 'resources/assets/jsx/*.jsx';
     dest = dest || 'public/js';
 
-    var doConcat = ~dest.indexOf('.js');
+    var paths = new Elixir.GulpPaths().src(src).output(dest);
 
-    new Task("jsx", function () {
-        return gulp.src(src)
+    new Elixir.Task('jsx', function () {
+
+        this.log(paths.src, paths.output);
+
+        return gulp.
+            src(paths.src.path)
             .pipe(react())
-            .pipe(gulpif(doConcat, concat(dest)))
-            .pipe(gulp.dest(dest))
-            .pipe(new Elixir.Notification('Jsx Compiled!'));
-    });
+            .pipe($.if(!paths.output.isDir, $.rename(paths.output.name)))
+            .pipe(gulp.dest(paths.output.baseDir))
+            .pipe(new Elixir.Notification('React Compiled!'));
+    })
+
+        .watch(paths.src.path)
+
 
 });
